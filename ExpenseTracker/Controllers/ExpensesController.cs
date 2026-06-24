@@ -1,3 +1,5 @@
+using ExpenseTracker.Models;
+using ExpenseTracker.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpenseTracker.Controllers
@@ -9,25 +11,30 @@ namespace ExpenseTracker.Controllers
     [Route("api/[controller]")]
     public class ExpensesController : ControllerBase
     {
-        private static readonly List<ExpenseRecord> Expenses = new();
-        private static int nextId = 1;
+        private readonly ExpenseService _expenseService;
+
+        public ExpensesController(ExpenseService expenseService)
+        {
+            _expenseService = expenseService;
+        }
 
         /// <summary>
         /// Gets all expenses.
         /// </summary>
         [HttpGet]
-        public ActionResult<IEnumerable<ExpenseRecord>> GetAll()
+        public async Task<ActionResult<IEnumerable<Expense>>> GetAll()
         {
-            return Ok(Expenses.OrderBy(e => e.CreatedAt).ToList());
+            var expenses = await _expenseService.GetAllAsync();
+            return Ok(expenses);
         }
 
         /// <summary>
         /// Gets a single expense by id.
         /// </summary>
         [HttpGet("{id:int}")]
-        public ActionResult<ExpenseRecord> GetById(int id)
+        public async Task<ActionResult<Expense>> GetById(int id)
         {
-            var expense = Expenses.FirstOrDefault(e => e.Id == id);
+            var expense = await _expenseService.GetByIdAsync(id);
             if (expense is null)
             {
                 return NotFound(new { error = "Expense not found." });
@@ -40,7 +47,7 @@ namespace ExpenseTracker.Controllers
         /// Creates a new expense.
         /// </summary>
         [HttpPost]
-        public IActionResult Create([FromBody] CreateExpenseRequest request)
+        public async Task<IActionResult> Create([FromBody] Expense request)
         {
             var validationError = ValidateRequest(request);
             if (validationError is not null)
@@ -48,16 +55,7 @@ namespace ExpenseTracker.Controllers
                 return BadRequest(new { error = validationError });
             }
 
-            var expense = new ExpenseRecord
-            {
-                Id = nextId++,
-                Title = request.Title.Trim(),
-                Amount = request.Amount,
-                Category = request.Category.Trim(),
-                CreatedAt = DateTime.UtcNow
-            };
-
-            Expenses.Add(expense);
+            var expense = await _expenseService.CreateAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = expense.Id }, expense);
         }
 
@@ -65,15 +63,14 @@ namespace ExpenseTracker.Controllers
         /// Deletes an expense by id.
         /// </summary>
         [HttpDelete("{id:int}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var expense = Expenses.FirstOrDefault(e => e.Id == id);
-            if (expense is null)
+            var deleted = await _expenseService.DeleteAsync(id);
+            if (!deleted)
             {
                 return NotFound(new { error = "Expense not found." });
             }
 
-            Expenses.Remove(expense);
             return NoContent();
         }
 
@@ -81,23 +78,13 @@ namespace ExpenseTracker.Controllers
         /// Gets a summary of all expenses.
         /// </summary>
         [HttpGet("summary")]
-        public ActionResult<object> GetSummary()
+        public async Task<ActionResult<object>> GetSummary()
         {
-            var totalAmount = Expenses.Sum(e => e.Amount);
-            var expenseCount = Expenses.Count;
-            var categoryBreakdown = Expenses
-                .GroupBy(e => e.Category)
-                .ToDictionary(g => g.Key, g => g.Sum(e => e.Amount));
-
-            return Ok(new
-            {
-                totalAmount,
-                expenseCount,
-                categoryBreakdown
-            });
+            var summary = await _expenseService.GetSummaryAsync();
+            return Ok(summary);
         }
 
-        private static string? ValidateRequest(CreateExpenseRequest request)
+        private static string? ValidateRequest(Expense request)
         {
             if (string.IsNullOrWhiteSpace(request.Title))
             {
@@ -110,22 +97,6 @@ namespace ExpenseTracker.Controllers
             }
 
             return null;
-        }
-
-        public sealed class ExpenseRecord
-        {
-            public int Id { get; set; }
-            public string Title { get; set; } = string.Empty;
-            public decimal Amount { get; set; }
-            public string Category { get; set; } = string.Empty;
-            public DateTime CreatedAt { get; set; }
-        }
-
-        public sealed class CreateExpenseRequest
-        {
-            public string Title { get; set; } = string.Empty;
-            public decimal Amount { get; set; }
-            public string Category { get; set; } = string.Empty;
         }
     }
 }

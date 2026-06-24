@@ -1,9 +1,15 @@
--- SQL queries for ExpenseTracker
--- Example table creation
-CREATE TABLE Expenses (
-    Id INT PRIMARY KEY IDENTITY(1,1),
-    Description NVARCHAR(255),
-    Amount DECIMAL(10,2) NOT NULL,
-    Date DATETIME NOT NULL,
-    Category NVARCHAR(100)
-);
+-- Query 1: Retrieve all expenses with their category names
+SELECT Id, Title, Amount, Category, CreatedAt
+FROM Expenses
+ORDER BY CreatedAt DESC;
+
+-- Query 2: Retrieve total amount spent per category
+SELECT Category, SUM(Amount) AS TotalAmount
+FROM Expenses
+GROUP BY Category
+ORDER BY TotalAmount DESC;
+
+-- Query 3: Retrieve the most expensive expense
+SELECT TOP 1 Id, Title, Amount, Category, CreatedAt
+FROM Expenses
+ORDER BY Amount DESC;
