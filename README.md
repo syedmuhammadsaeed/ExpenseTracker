@@ -1,47 +1,67 @@
- # ExpenseTracker
+# ExpenseTracker
 
-A professional ASP.NET Core Web API for managing personal expenses with an in-memory storage layer.
+A simple ASP.NET Core Web API for tracking personal expenses. The app stores data in memory while the server is running, so the data is lost if the application is stopped.
 
 ## Features
-- Create, read, update, and delete expenses
-- In-memory storage with auto-incrementing IDs
-- Validation for required fields and positive amounts
+- Create, list, get, and delete expenses
+- Validation for required title and positive amount values
 - Summary endpoint with totals and category breakdown
-- Swagger UI for interactive API testing
-
-## API Endpoints
-- GET /api/expenses
-- GET /api/expenses/{id}
-- POST /api/expenses
-- DELETE /api/expenses/{id}
-- GET /api/expenses/summary
+- Swagger UI for testing the API in a browser
 
 ## Prerequisites
-- .NET 8 SDK
-- Visual Studio 2022 or VS Code with C# extension
+Before running the project, make sure .NET 8 SDK is installed on your computer.
 
-## Installation
-```bash
+Check it with this command in PowerShell:
+```powershell
+dotnet --version
+```
+
+If this command does not work, install the .NET 8 SDK from the official Microsoft website.
+
+## Open the project folder
+Open PowerShell and go to the folder that contains the project.
+
+Example:
+```powershell
+cd C:\path\to\ExpenseTracker
+```
+
+Replace the path above with the actual folder where you saved the project.
+
+## Restore dependencies
+Run this command:
+```powershell
 dotnet restore
+```
+
+## Build the project
+Run this command:
+```powershell
 dotnet build
 ```
 
-## Run the Application
-```bash
-dotnet run
+## Start the API
+Run this command:
+```powershell
+dotnet run --project .\ExpenseTracker.csproj --urls http://localhost:5005
 ```
 
-Then open:
+This starts the application. After it starts, open this address in your browser:
 ```text
-https://localhost:5001/swagger
+http://localhost:5005/swagger
 ```
 
-## Example Requests
-### Create Expense
-```http
-POST /api/expenses
-Content-Type: application/json
+You can also open:
+```text
+http://localhost:5005/
+```
 
+## Test the API
+Open Swagger in your browser and try the endpoints.
+
+### Example request to create an expense
+Use this JSON body in the POST request:
+```json
 {
   "title": "Lunch",
   "amount": 250,
@@ -49,12 +69,14 @@ Content-Type: application/json
 }
 ```
 
-### Get Summary
-```http
-GET /api/expenses/summary
-```
+## API endpoints
+- GET /api/expenses
+- GET /api/expenses/{id}
+- POST /api/expenses
+- DELETE /api/expenses/{id}
+- GET /api/expenses/summary
 
-## Project Structure
+## Project files
 - Controllers/
 - Models/
 - Services/

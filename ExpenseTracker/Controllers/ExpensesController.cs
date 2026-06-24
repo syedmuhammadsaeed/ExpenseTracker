@@ -47,7 +47,7 @@ namespace ExpenseTracker.Controllers
         /// Creates a new expense.
         /// </summary>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Expense request)
+        public async Task<IActionResult> Create([FromBody] CreateExpenseRequest request)
         {
             var validationError = ValidateRequest(request);
             if (validationError is not null)
@@ -55,8 +55,15 @@ namespace ExpenseTracker.Controllers
                 return BadRequest(new { error = validationError });
             }
 
-            var expense = await _expenseService.CreateAsync(request);
-            return CreatedAtAction(nameof(GetById), new { id = expense.Id }, expense);
+            var expense = new Expense
+            {
+                Title = request.Title.Trim(),
+                Amount = request.Amount,
+                Category = request.Category.Trim()
+            };
+
+            var createdExpense = await _expenseService.CreateAsync(expense);
+            return CreatedAtAction(nameof(GetById), new { id = createdExpense.Id }, createdExpense);
         }
 
         /// <summary>
@@ -84,7 +91,7 @@ namespace ExpenseTracker.Controllers
             return Ok(summary);
         }
 
-        private static string? ValidateRequest(Expense request)
+        private static string? ValidateRequest(CreateExpenseRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Title))
             {
